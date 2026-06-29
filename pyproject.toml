@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "tinystories"
+version = "1.0.0"
+description = "Implementation of 'TinyStories: How Small Can Language Models Be and Still Speak Coherent English?' (Eldan & Li, 2023)"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Shahip2016"},
+]
+keywords = ["language-models", "transformers", "tiny-stories", "nlp", "gpt"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "datasets>=2.12.0",
+    "tiktoken>=0.4.0",
+    "tqdm>=4.65.0",
+    "numpy>=1.24.0",
+    "wandb>=0.15.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.1.0",
+]
+eval = [
+    "openai>=1.0.0",
+]
+
+[project.scripts]
+tinystories-generate = "tinystories.generate:main"
+tinystories-train = "tinystories.train:main"
+tinystories-eval = "tinystories.evaluate:main"
+tinystories-data = "tinystories.data.prepare:main"
+
+[tool.setuptools.packages.find]
+include = ["tinystories*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
