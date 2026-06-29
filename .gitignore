@@ -48,7 +48,7 @@ htmlcov/
 .mypy_cache/
 
 # Project-specific
-data/
+/data/
 checkpoints/
 outputs/
 logs/
