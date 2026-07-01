@@ -131,6 +131,103 @@ class TrainConfig:
     device: str = "auto"  # "auto", "cuda", "cpu", "mps"
 
 
+@dataclass
+class RLConfig:
+    """Reinforcement learning fine-tuning configuration (PPO).
+
+    Hyperparameters for Proximal Policy Optimization used to fine-tune
+    a pre-trained TinyStories model against a reward signal (learned or
+    heuristic). The defaults follow standard PPO practices from the
+    RLHF literature (Ziegler et al., 2019; Ouyang et al., 2022).
+    """
+
+    # PPO clipping and objectives
+    clip_range: float = 0.2  # PPO clipping parameter ε
+    clip_value: bool = True  # Whether to also clip the value loss
+    value_loss_coeff: float = 0.5  # Weight of value loss in total objective
+    entropy_coeff: float = 0.01  # Entropy bonus to encourage exploration
+
+    # KL penalty against reference policy
+    kl_coeff: float = 0.1  # Initial KL penalty coefficient
+    kl_target: Optional[float] = 6.0  # Target KL divergence for adaptive coeff
+    kl_horizon: int = 10000  # Steps over which to adapt kl_coeff
+
+    # GAE (Generalized Advantage Estimation)
+    gamma: float = 1.0  # Discount factor (1.0 = no discounting for short stories)
+    lam: float = 0.95  # GAE λ parameter
+
+    # PPO training
+    ppo_epochs: int = 4  # Number of PPO epochs per rollout batch
+    mini_batch_size: int = 8  # Mini-batch size for PPO updates
+    max_gen_len: int = 128  # Maximum generation length during rollouts
+    rollout_batch_size: int = 32  # Number of prompts per rollout
+    total_rollout_steps: int = 1000  # Total number of rollout-update cycles
+
+    # Optimization
+    learning_rate: float = 1e-5  # Lower LR than pre-training for fine-tuning
+    weight_decay: float = 0.01
+    max_grad_norm: float = 1.0
+    warmup_steps: int = 50
+
+    # Reward
+    reward_model_path: Optional[str] = None  # Path to learned reward model
+    use_heuristic_reward: bool = True  # Use rule-based reward as fallback
+
+    # Reference model
+    ref_model_path: Optional[str] = None  # Defaults to the SFT checkpoint
+
+    # Checkpointing
+    output_dir: str = "checkpoints/rl"
+    save_every_steps: int = 100
+    log_every_steps: int = 10
+    eval_every_steps: int = 50
+
+    # Mixed precision
+    use_amp: bool = True
+    dtype: str = "float16"
+
+    # Reproducibility
+    seed: int = 42
+
+    # Logging
+    wandb_project: Optional[str] = None
+    wandb_run_name: Optional[str] = None
+
+    # Device
+    device: str = "auto"
+
+
+def get_default_rl_config(model_name: str = "tiny-3M") -> RLConfig:
+    """Get RL config with defaults tuned for a given model size.
+
+    Smaller models tolerate higher learning rates and larger KL budgets,
+    while larger models need more conservative fine-tuning.
+    """
+    config = RLConfig()
+
+    if "1M" in model_name or "1L" in model_name:
+        config.learning_rate = 5e-5
+        config.rollout_batch_size = 64
+        config.mini_batch_size = 16
+        config.kl_coeff = 0.05
+    elif "3M" in model_name:
+        config.learning_rate = 2e-5
+        config.rollout_batch_size = 32
+        config.mini_batch_size = 8
+    elif "8M" in model_name:
+        config.learning_rate = 1e-5
+        config.rollout_batch_size = 32
+        config.mini_batch_size = 8
+    elif "28M" in model_name or "33M" in model_name:
+        config.learning_rate = 5e-6
+        config.rollout_batch_size = 16
+        config.mini_batch_size = 4
+        config.warmup_steps = 100
+        config.kl_coeff = 0.2
+
+    return config
+
+
 # ============================================================================
 # Preset Configurations from the Paper
 # ============================================================================
