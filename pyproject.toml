@@ -43,6 +43,7 @@ eval = [
 [project.scripts]
 tinystories-generate = "tinystories.generate:main"
 tinystories-train = "tinystories.train:main"
+tinystories-train-rl = "tinystories.train_rl:main"
 tinystories-eval = "tinystories.evaluate:main"
 tinystories-data = "tinystories.data.prepare:main"
 
