@@ -16,6 +16,7 @@ This repository provides a complete, from-scratch implementation of the TinyStor
 | **Synthetic Dataset Generation** | GPT-3.5/GPT-4-powered pipeline to generate stories constrained to a 3–4 year old's vocabulary |
 | **Small Transformer Models** | GPT-Neo-style decoder-only transformers from 1M to 33M parameters |
 | **Training Pipeline** | Full training loop with mixed precision, gradient accumulation, and cosine LR scheduling |
+| **RL Fine-Tuning (PPO)** | Post-SFT optimization via Proximal Policy Optimization with learned or heuristic reward |
 | **GPT-Eval Framework** | GPT-4-as-judge evaluation scoring grammar, creativity, and consistency (1–10 scale) |
 | **Text Generation** | Inference with top-k, top-p, and temperature sampling |
 
@@ -23,7 +24,7 @@ This repository provides a complete, from-scratch implementation of the TinyStor
 
 ```
 tinystories/
-├── config.py              # Model & training configurations (1M → 33M)
+├── config.py              # Model, training & RL configurations (1M → 33M)
 ├── data/
 │   ├── vocabulary.py      # Curated ~1500 word vocabulary for 3-4 year olds
 │   ├── generate_stories.py # Synthetic story generation via OpenAI API
@@ -31,7 +32,13 @@ tinystories/
 ├── model/
 │   ├── transformer.py     # GPT-Neo decoder-only transformer
 │   └── attention.py       # Multi-head causal self-attention
-├── train.py               # Training loop with checkpointing
+├── rl/                    # Reinforcement learning fine-tuning
+│   ├── reward.py          # Learned & heuristic reward models
+│   ├── value.py           # Value head & PolicyWithValueHead wrapper
+│   ├── rollout.py         # Rollout buffer & GAE advantage estimation
+│   └── ppo_trainer.py     # PPO training loop
+├── train.py               # SFT training loop with checkpointing
+├── train_rl.py            # RL fine-tuning CLI entry point
 ├── generate.py            # Story generation / inference
 └── evaluate.py            # GPT-4 evaluation framework
 ```
@@ -107,6 +114,36 @@ python -m tinystories.data.generate_stories \
 | `tiny-8M` | ~8M | 8 | 256 | 8 | 512 |
 | `tiny-28M` | ~28M | 16 | 512 | 8 | 512 |
 | `tiny-33M` | ~33M | 16 | 576 | 12 | 512 |
+
+## RL Fine-Tuning (PPO)
+
+After supervised pre-training, models can be further optimized using **Proximal Policy Optimization** (PPO) against a reward signal. Two reward strategies are supported:
+
+| Strategy | Description | Data Required |
+|----------|-------------|---------------|
+| **Heuristic** | Rule-based scoring: vocabulary diversity, repetition penalty, sentence structure, length | None |
+| **Learned** | Transformer-based reward model trained on quality preferences | Preference labels |
+
+### Fine-tune with heuristic reward (no extra data needed)
+
+```bash
+python -m tinystories.train_rl \
+    --checkpoint checkpoints/tiny-3M/best.pt \
+    --use_heuristic_reward \
+    --output_dir checkpoints/rl-tiny-3M \
+    --total_steps 500
+```
+
+### Fine-tune with a learned reward model
+
+```bash
+python -m tinystories.train_rl \
+    --checkpoint checkpoints/tiny-3M/best.pt \
+    --reward_model checkpoints/reward_model.pt \
+    --output_dir checkpoints/rl-tiny-3M
+```
+
+Key PPO hyperparameters can be overridden from the CLI: `--lr`, `--clip_range`, `--kl_coeff`, `--ppo_epochs`, `--max_gen_len`.
 
 ## Evaluation (GPT-Eval)
 
