@@ -88,6 +88,7 @@ def generate_story(
     temperature: float = 0.8,
     top_k: int = 50,
     top_p: float = 0.9,
+    repetition_penalty: float = 1.0,
     device: torch.device = None,
 ) -> str:
     """Generate a single story from a prompt.
@@ -100,6 +101,7 @@ def generate_story(
         temperature: Sampling temperature (lower = more deterministic).
         top_k: Keep only top-k probability tokens for sampling.
         top_p: Nucleus sampling probability threshold.
+        repetition_penalty: Penalty for repeating tokens (1.0 means no penalty).
         device: Device for computation.
 
     Returns:
@@ -120,6 +122,7 @@ def generate_story(
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,
+            repetition_penalty=repetition_penalty,
         )
 
     # Decode
@@ -138,6 +141,7 @@ def generate_batch(
     temperature: float = 0.8,
     top_k: int = 50,
     top_p: float = 0.9,
+    repetition_penalty: float = 1.0,
     device: torch.device = None,
 ) -> List[dict]:
     """Generate multiple story completions for a list of prompts.
@@ -154,6 +158,7 @@ def generate_batch(
         temperature: Sampling temperature.
         top_k: Top-k filtering parameter.
         top_p: Nucleus sampling threshold.
+        repetition_penalty: Penalty for repeating tokens (1.0 means no penalty).
         device: Device for computation.
 
     Returns:
@@ -170,6 +175,7 @@ def generate_batch(
                 temperature=temperature,
                 top_k=top_k,
                 top_p=top_p,
+                repetition_penalty=repetition_penalty,
                 device=device,
             )
             completions.append(text)
@@ -186,6 +192,7 @@ def generate_batch(
                 "temperature": temperature,
                 "top_k": top_k,
                 "top_p": top_p,
+                "repetition_penalty": repetition_penalty,
                 "max_new_tokens": max_new_tokens,
             },
         })
@@ -240,6 +247,10 @@ def main():
     parser.add_argument(
         "--top_p", type=float, default=0.9,
         help="Nucleus sampling threshold (default: 0.9)",
+    )
+    parser.add_argument(
+        "--repetition_penalty", type=float, default=1.0,
+        help="Penalty for repeating tokens (default: 1.0)",
     )
     parser.add_argument(
         "--num_completions", type=int, default=1,
@@ -302,6 +313,7 @@ def main():
             temperature=args.temperature,
             top_k=args.top_k,
             top_p=args.top_p,
+            repetition_penalty=args.repetition_penalty,
             device=device,
         )
         print("\n" + "=" * 60)
@@ -318,6 +330,7 @@ def main():
             temperature=args.temperature,
             top_k=args.top_k,
             top_p=args.top_p,
+            repetition_penalty=args.repetition_penalty,
             device=device,
         )
 
