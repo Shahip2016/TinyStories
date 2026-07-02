@@ -257,6 +257,10 @@ def main():
         "--use_defaults", action="store_true",
         help="Use default evaluation prompts from the paper",
     )
+    parser.add_argument(
+        "--seed", type=int, default=None,
+        help="Random seed for reproducible generation",
+    )
 
     args = parser.parse_args()
 
@@ -270,6 +274,9 @@ def main():
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         device = torch.device(args.device)
+
+    if args.seed is not None:
+        torch.manual_seed(args.seed)
 
     # Load model
     model, tokenizer, config = load_model_from_checkpoint(args.checkpoint, device)
