@@ -274,6 +274,10 @@ def main():
         help="Use default evaluation prompts from the paper",
     )
     parser.add_argument(
+        "--no_print_prompt", action="store_true",
+        help="Do not print the prompt header, just the generated text",
+    )
+    parser.add_argument(
         "--seed", type=int, default=None,
         help="Random seed for reproducible generation",
     )
@@ -321,11 +325,13 @@ def main():
             repetition_penalty=args.repetition_penalty,
             device=device,
         )
-        print("\n" + "=" * 60)
-        print(f"Prompt: {prompts[0]}")
-        print("=" * 60)
+        if not args.no_print_prompt:
+            print("\n" + "=" * 60)
+            print(f"Prompt: {prompts[0]}")
+            print("=" * 60)
         print(text)
-        print("=" * 60 + "\n")
+        if not args.no_print_prompt:
+            print("=" * 60 + "\n")
     else:
         # Batch generation
         results = generate_batch(
@@ -341,13 +347,16 @@ def main():
 
         # Print results
         for result in results:
-            print("\n" + "=" * 60)
-            print(f"Prompt: {result['prompt']}")
-            print("-" * 60)
+            if not args.no_print_prompt:
+                print("\n" + "=" * 60)
+                print(f"Prompt: {result['prompt']}")
+                print("-" * 60)
             for i, completion in enumerate(result["completions"]):
-                print(f"\n--- Completion {i+1} ---")
+                if not args.no_print_prompt:
+                    print(f"\n--- Completion {i+1} ---")
                 print(completion)
-            print("=" * 60)
+            if not args.no_print_prompt:
+                print("=" * 60)
 
         # Save if requested
         if args.output_file:
