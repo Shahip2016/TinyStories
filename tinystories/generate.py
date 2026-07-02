@@ -29,6 +29,7 @@ import argparse
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 from typing import List, Optional
 
@@ -115,6 +116,8 @@ def generate_story(
     input_ids = torch.tensor([tokens], dtype=torch.long, device=device)
 
     # Generate
+    import time
+    start_time = time.time()
     with torch.no_grad():
         output_ids = model.generate(
             input_ids,
@@ -124,6 +127,8 @@ def generate_story(
             top_p=top_p,
             repetition_penalty=repetition_penalty,
         )
+    elapsed = time.time() - start_time
+    logger.info(f"Generated {output_ids.shape[1] - input_ids.shape[1]} tokens in {elapsed:.2f}s")
 
     # Decode
     generated_tokens = output_ids[0].tolist()
