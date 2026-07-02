@@ -236,6 +236,7 @@ class TinyStoriesModel(nn.Module):
         temperature: float = 1.0,
         top_k: int = 50,
         top_p: float = 0.9,
+        repetition_penalty: float = 1.0,
     ) -> torch.Tensor:
         """Auto-regressive text generation with sampling.
 
@@ -249,6 +250,7 @@ class TinyStoriesModel(nn.Module):
             temperature: Sampling temperature (higher = more random).
             top_k: Keep only top-k highest probability tokens.
             top_p: Nucleus sampling threshold.
+            repetition_penalty: Penalty for repeating tokens (1.0 means no penalty).
 
         Returns:
             Extended token sequence including generated tokens.
@@ -266,6 +268,12 @@ class TinyStoriesModel(nn.Module):
 
             # Get logits for the last position
             logits = logits[:, -1, :] / temperature
+
+            # Apply repetition penalty
+            if repetition_penalty != 1.0:
+                score = torch.gather(logits, 1, input_ids)
+                score = torch.where(score < 0, score * repetition_penalty, score / repetition_penalty)
+                logits.scatter_(1, input_ids, score)
 
             # Top-k filtering
             if top_k > 0:
