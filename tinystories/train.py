@@ -504,6 +504,7 @@ def main():
     parser.add_argument("--max_steps", type=int, default=None, help="Max training steps")
     parser.add_argument("--lr", type=float, default=None, help="Learning rate override")
     parser.add_argument("--batch_size", type=int, default=None, help="Batch size override")
+    parser.add_argument("--save_every", type=int, default=None, help="Save every N steps")
     parser.add_argument("--resume", type=str, default=None, help="Checkpoint to resume from")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--wandb_project", type=str, default=None, help="W&B project name")
@@ -534,6 +535,8 @@ def main():
         train_config.learning_rate = args.lr
     if args.batch_size:
         train_config.batch_size = args.batch_size
+    if args.save_every:
+        train_config.save_every_steps = args.save_every
     if args.wandb_project:
         train_config.wandb_project = args.wandb_project
 
